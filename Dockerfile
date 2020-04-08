@@ -2,13 +2,7 @@ FROM ubuntu:latest
 
 RUN apt-get update && apt-get install -y \
     certbot \
-    automake \
-    build-essential \
     curl \
-    all\
-    your\
-    other\
-    packages\
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /etc/letsencrypt
