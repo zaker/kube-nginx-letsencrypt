@@ -1,7 +1,6 @@
-FROM fedora:24
-MAINTAINER Seth Jennings <sethdjennings@gmail.com>
+FROM alpine
 
-RUN dnf install certbot -y && dnf clean all
+RUN apk add --update --no-cache certbot curl
 RUN mkdir /etc/letsencrypt
 
 CMD ["/entrypoint.sh"]
