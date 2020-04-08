@@ -7,9 +7,9 @@ if [[ -z $EMAIL || -z $DOMAINS || -z $SECRET || -z $DEPLOYMENT ]]; then
 fi
 
 if [[ -z $STAGING  ]]; then
-	STAGING =""
+	export STAGING=""
 else
-	STAGING ="--staging"
+	export STAGING=--staging
 fi
 
 NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
