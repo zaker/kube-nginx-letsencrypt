@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z $EMAIL || -z $DOMAINS || -z $SECRET || -z $DEPLOYMENT ]]; then
-	echo "EMAIL, DOMAINS, SECERT, and DEPLOYMENT env vars required"
+	echo "EMAIL, DOMAINS, SECRET, and DEPLOYMENT env vars required"
 	env
 	exit 1
 fi

@@ -1,6 +1,6 @@
 FROM alpine
 
-RUN apk add --update --no-cache certbot curl
+RUN apk add --update --no-cache certbot curl bash
 RUN mkdir /etc/letsencrypt
 
 CMD ["/entrypoint.sh"]
