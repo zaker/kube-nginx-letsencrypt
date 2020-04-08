@@ -5,8 +5,6 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir /etc/letsencrypt
-
 CMD ["/entrypoint.sh"]
 
 COPY secret-patch-template.json /
