@@ -1,6 +1,16 @@
-FROM alpine
+FROM ubuntu:latest
 
-RUN apk add --update --no-cache certbot curl bash
+RUN apt-get update && apt-get install -y \
+    certbot \
+    automake \
+    build-essential \
+    curl \
+    all\
+    your\
+    other\
+    packages\
+    && rm -rf /var/lib/apt/lists/*
+
 RUN mkdir /etc/letsencrypt
 
 CMD ["/entrypoint.sh"]
