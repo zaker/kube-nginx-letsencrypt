@@ -15,7 +15,7 @@ echo " SECRET: $SECRET"
 if [[ -z $STAGING  ]]; then
 	export STAGING=""
 else
-	export STAGING=--staging
+	export STAGING="--staging"
 	echo " STAGING: $STAGING"
 fi
 
