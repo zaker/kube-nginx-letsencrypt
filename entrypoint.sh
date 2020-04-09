@@ -21,7 +21,7 @@ if [[ -z $STAGING  ]]; then
 	certbot certonly --webroot -w $HOME -n --agree-tos --email ${EMAIL} --no-self-upgrade -d ${DOMAINS} 
 else
 	echo "Starting staging certbot..."
-	certbot certonly --staging --webroot -w $HOME -n --agree-tos --email ${EMAIL} --no-self-upgrade -d ${DOMAINS} 
+	certbot certonly --staging --test-cert --webroot -w $HOME -n --agree-tos --email ${EMAIL} --no-self-upgrade -d ${DOMAINS} 
 	
 fi
 
