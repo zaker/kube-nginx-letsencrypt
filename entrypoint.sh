@@ -1,29 +1,42 @@
 #!/bin/bash
 
-if [[ -z $EMAIL || -z $DOMAINS || -z $SECRET || -z $DEPLOYMENT ]]; then
-	echo "EMAIL, DOMAINS, SECRET, and DEPLOYMENT env vars required"
+if [[ -z $EMAIL || -z $DOMAINS || -z $SECRET ]]; then
+	echo "EMAIL, DOMAINS, and SECRET env vars required"
 	env
 	exit 1
 fi
+echo "Inputs:"
+echo " EMAIL: $EMAIL"
+echo " DOMAINS: $DOMAINS"
+echo " SECRET: $SECRET"
+
+
 
 if [[ -z $STAGING  ]]; then
 	export STAGING=""
 else
 	export STAGING=--staging
+	echo " STAGING: $STAGING"
 fi
 
-NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
 
+NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+echo "Current Kubernetes namespce: $NAMESPACE"
 cd $HOME
+echo "Starting HTTP server..."
 python -m SimpleHTTPServer 80 &
 PID=$!
+echo "Starting certbot..."
 certbot certonly --webroot -w $HOME -n --agree-tos --email ${EMAIL} --no-self-upgrade -d ${DOMAINS} ${STAGING}
 kill $PID
+echo "Certbot finished. Killing http server..."
 
+echo "Finiding certs. Exiting if certs are not found ..."
 CERTPATH=/etc/letsencrypt/live/$(echo $DOMAINS | cut -f1 -d',')
-
 ls $CERTPATH || exit 1
 
+
+echo "Creating update for secret..."
 cat /secret-patch-template.json | \
 	sed "s/NAMESPACE/${NAMESPACE}/" | \
 	sed "s/NAME/${SECRET}/" | \
@@ -31,18 +44,20 @@ cat /secret-patch-template.json | \
 	sed "s/TLSKEY/$(cat ${CERTPATH}/privkey.pem |  base64 | tr -d '\n')/" \
 	> /secret-patch.json
 
+
+echo "Checking json file exists. Exiting if not found..."
 ls /secret-patch.json || exit 1
 
 # update secret
-curl -v --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" -k -v -XPATCH  -H "Accept: application/json, */*" -H "Content-Type: application/strategic-merge-patch+json" -d @/secret-patch.json https://kubernetes.default/api/v1/namespaces/${NAMESPACE}/secrets/${SECRET}
+echo "Updating secret..."
+curl \
+	-k -v \
+	--cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+	-H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+	-XPATCH \
+	-H "Accept: application/json, */*" \
+	-H "Content-Type: application/strategic-merge-patch+json" \
+	-d @/secret-patch.json \
+	https://kubernetes.default/api/v1/namespaces/${NAMESPACE}/secrets/${SECRET}
 
-cat /deployment-patch-template.json | \
-	sed "s/TLSUPDATED/$(date)/" | \
-	sed "s/NAMESPACE/${NAMESPACE}/" | \
-	sed "s/NAME/${DEPLOYMENT}/" \
-	> /deployment-patch.json
-
-ls /deployment-patch.json || exit 1
-
-# update pod spec on ingress deployment to trigger redeploy
-curl -v --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" -k -v -XPATCH  -H "Accept: application/json, */*" -H "Content-Type: application/strategic-merge-patch+json" -d @/deployment-patch.json https://kubernetes.default/apis/apps/v1/namespaces/${NAMESPACE}/deployments/${DEPLOYMENT}
+echo "Done"
