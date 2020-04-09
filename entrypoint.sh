@@ -10,24 +10,21 @@ echo " EMAIL: $EMAIL"
 echo " DOMAINS: $DOMAINS"
 echo " SECRET: $SECRET"
 
-
-
-if [[ -z $STAGING  ]]; then
-	export STAGING=""
-else
-	export STAGING="--staging"
-	echo " STAGING: $STAGING"
-fi
-
-
 NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
 echo "Current Kubernetes namespce: $NAMESPACE"
 cd $HOME
 echo "Starting HTTP server..."
 python -m SimpleHTTPServer 80 &
 PID=$!
-echo "Starting certbot..."
-certbot certonly --webroot -w $HOME -n --agree-tos --email ${EMAIL} --no-self-upgrade -d ${DOMAINS} ${STAGING}
+if [[ -z $STAGING  ]]; then
+	echo "Starting certbot..."
+	certbot certonly --webroot -w $HOME -n --agree-tos --email ${EMAIL} --no-self-upgrade -d ${DOMAINS} 
+else
+	echo "Starting staging certbot..."
+	certbot certonly --staging --webroot -w $HOME -n --agree-tos --email ${EMAIL} --no-self-upgrade -d ${DOMAINS} 
+	
+fi
+
 kill $PID
 echo "Certbot finished. Killing http server..."
 
